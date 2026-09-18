@@ -50,12 +50,13 @@ export class SathiBrain {
     const trimmed = userInput.trim().toLowerCase();
     this.conversationHistory.push({ role: 'user', text: userInput });
 
-    const geminiEnabled =
+    const remoteAiEnabled =
       typeof window !== 'undefined' &&
       (window.__ENABLE_GEMINI_ENDPOINT__ === true ||
-        import.meta.env?.VITE_ENABLE_GEMINI === 'true');
+        import.meta.env?.VITE_ENABLE_GEMINI === 'true' ||
+        import.meta.env?.VITE_ENABLE_GROQ === 'true');
 
-    if (geminiEnabled && this.isOnline()) {
+    if (remoteAiEnabled && this.isOnline()) {
       try {
         const res = await fetch('/api/sathi', {
           method: 'POST',
@@ -440,6 +441,12 @@ export class SathiBrain {
       state: 'speaking',
     };
   }
+}
+
+// Single integration boundary: the UI does not need to know whether intent
+// resolution is local or backed by the future secure Gemini route.
+export async function resolveIntent(userSpeech, context = {}) {
+  return sathiBrain.processInput(userSpeech, context);
 }
 
 export const sathiBrain = new SathiBrain();

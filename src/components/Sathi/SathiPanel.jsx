@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Mic, MicOff, RotateCcw, HelpCircle, X, Send, Globe } from 'lucide-react';
-import SathiAvatar from './SathiAvatar';
+import { Mic, MicOff, RotateCcw, HelpCircle, X, Send, Globe, Radio } from 'lucide-react';
+import SathiOrb from './SathiOrb';
 import SathiAudioVisualizer from './SathiAudioVisualizer';
 import { cognitiveStore } from '../../lib/store/cognitiveStore';
 
@@ -9,10 +9,12 @@ export default function SathiPanel({
   transcript,
   sathiReply,
   isListening,
+  continuousListening = false,
   isOnline = true,
   speechSupported = true,
   onStartListening,
   onStopListening,
+  onToggleContinuous,
   onSendMessage,
   onRepeat,
   onClose,
@@ -95,9 +97,9 @@ export default function SathiPanel({
         </div>
       )}
 
-      <div className="px-6 pt-6 pb-3 bg-gradient-to-b from-cream/60 via-warm-white to-warm-white flex flex-col items-center text-center">
-        <div className="relative mb-3 mt-1">
-          <SathiAvatar state={state} size="lg" showLabel variant="bust" />
+      <div className="px-6 pt-5 pb-3 bg-gradient-to-b from-cream/60 via-warm-white to-warm-white flex flex-col items-center text-center">
+        <div className="relative mb-3 mt-1 flex h-32 w-32 items-center justify-center sm:h-36 sm:w-36">
+          <SathiOrb state={state} size="md" showLabel variant="bust" />
         </div>
         <h3 className="font-serif text-xl sm:text-2xl font-bold text-charcoal mb-0.5">Sathi</h3>
         <p className="text-xs text-charcoal/65 max-w-xs font-light">
@@ -208,6 +210,22 @@ export default function SathiPanel({
             <span>Voice not available here — type below instead</span>
           )}
         </p>
+
+        {speechSupported && (
+          <button
+            type="button"
+            onClick={onToggleContinuous}
+            className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-pill border px-4 py-2 text-xs font-semibold transition ${
+              continuousListening
+                ? 'border-sage bg-sage-light text-sage-dark'
+                : 'border-charcoal/15 bg-warm-white text-charcoal/70 hover:border-terracotta/40 hover:text-terracotta'
+            }`}
+            aria-pressed={continuousListening}
+          >
+            <Radio size={15} className={continuousListening ? 'animate-pulse' : ''} />
+            {continuousListening ? 'Continuous listening is on' : 'Turn on continuous listening'}
+          </button>
+        )}
 
         <form onSubmit={handleFormSubmit} className="flex items-center gap-2">
           <input

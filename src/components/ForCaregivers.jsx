@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ShieldCheck, Clock, Smartphone, CheckCircle2, Sparkles } from 'lucide-react';
+import { ShieldCheck, Clock, Smartphone, CheckCircle2, Sparkles, LayoutDashboard } from 'lucide-react';
 import { cognitiveStore } from '../lib/store/cognitiveStore';
 import MemoryStudio from './MemoryStudio';
+import GeofenceMonitor from './GeofenceMonitor';
 
-export default function ForCaregivers({ onOpenPersonalizedGame }) {
+export default function ForCaregivers({ onOpenPersonalizedGame, onOpenDashboard }) {
   const [activeTab, setActiveTab] = useState('meds');
   const [storeState, setStoreState] = useState(cognitiveStore.getState());
 
@@ -203,6 +204,15 @@ export default function ForCaregivers({ onOpenPersonalizedGame }) {
                 return (
                   <div className="bg-warm-white p-3 rounded-soft border border-charcoal/5 flex items-center justify-between">
                     <div>
+
+                    <button
+                      type="button"
+                      onClick={onOpenDashboard}
+                      className="mt-3 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-pill bg-charcoal px-5 py-3 text-sm font-semibold text-warm-white transition hover:bg-charcoal/90"
+                    >
+                      <LayoutDashboard size={17} />
+                      Open full family dashboard
+                    </button>
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-semibold text-charcoal">{info.event}</span>
                         <span className="text-[10px] text-terracotta font-medium">({info.time})</span>
@@ -220,6 +230,7 @@ export default function ForCaregivers({ onOpenPersonalizedGame }) {
         </div>
 
         <MemoryStudio onOpenPersonalizedGame={onOpenPersonalizedGame} />
+        <GeofenceMonitor />
 
       </div>
     </section>
