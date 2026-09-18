@@ -1,0 +1,26 @@
+// 23 Cropped Authentic Indian Cultural, Botanical & Household Icons
+export const GAME_ICONS = [
+  { id: 'icon-01', name: 'Neel Kuranji', sub: 'Blue Orchid', category: 'Flowers', src: '/images/game-icons/icon-01.png' },
+  { id: 'icon-02', name: 'Burans', sub: 'Rhododendron', category: 'Flowers', src: '/images/game-icons/icon-02.png' },
+  { id: 'icon-03', name: 'Genda', sub: 'Marigold Blossom', category: 'Flowers', src: '/images/game-icons/icon-03.png' },
+  { id: 'icon-04', name: 'Gudhal', sub: 'Red Hibiscus', category: 'Flowers', src: '/images/game-icons/icon-04.png' },
+  { id: 'icon-05', name: 'Kamal', sub: 'Sacred Water Lily', category: 'Flowers', src: '/images/game-icons/icon-05.png' },
+  { id: 'icon-06', name: 'Santra', sub: 'Nagpur Oranges', category: 'Fruits', src: '/images/game-icons/icon-06.png' },
+  { id: 'icon-07', name: 'Ananas', sub: 'Sunlit Pineapple', category: 'Fruits', src: '/images/game-icons/icon-07.png' },
+  { id: 'icon-08', name: 'Kela', sub: 'Fresh Bananas', category: 'Fruits', src: '/images/game-icons/icon-08.png' },
+  { id: 'icon-09', name: 'Amrood', sub: 'Pink Guava', category: 'Fruits', src: '/images/game-icons/icon-09.png' },
+  { id: 'icon-10', name: 'Litchi', sub: 'Sweet Lychee', category: 'Fruits', src: '/images/game-icons/icon-10.png' },
+  { id: 'icon-11', name: 'Peetal Kalash', sub: 'Brass Sacred Pot', category: 'Heritage', src: '/images/game-icons/icon-11.png' },
+  { id: 'icon-12', name: 'Tokri', sub: 'Woven Cane Basket', category: 'Heritage', src: '/images/game-icons/icon-12.png' },
+  { id: 'icon-13', name: 'Mitti ka Matka', sub: 'Earthen Water Pot', category: 'Heritage', src: '/images/game-icons/icon-13.png' },
+  { id: 'icon-14', name: 'Mitti ka Diya', sub: 'Glowing Clay Lamp', category: 'Heritage', src: '/images/game-icons/icon-14.png' },
+  { id: 'icon-15', name: 'Pankha', sub: 'Bamboo Hand Fan', category: 'Heritage', src: '/images/game-icons/icon-15.png' },
+  { id: 'icon-16', name: 'Garam Chai', sub: 'Steaming Tea Glass', category: 'Daily Life', src: '/images/game-icons/icon-16.png' },
+  { id: 'icon-17', name: 'Chawal', sub: 'Ceramic Rice Bowl', category: 'Daily Life', src: '/images/game-icons/icon-17.png' },
+  { id: 'icon-18', name: 'Baans Karil', sub: 'Bamboo Shoots', category: 'Daily Life', src: '/images/game-icons/icon-18.png' },
+  { id: 'icon-19', name: 'Gamusa', sub: 'Traditional Red Cloth', category: 'Daily Life', src: '/images/game-icons/icon-19.png' },
+  { id: 'icon-20', name: 'Dokhona', sub: 'Tribal Loom Weave', category: 'Daily Life', src: '/images/game-icons/icon-20.png' },
+  { id: 'icon-21', name: 'Jaapi', sub: 'Conical Sun Hat', category: 'Daily Life', src: '/images/game-icons/icon-21.png' },
+  { id: 'icon-22', name: 'Chai Patti', sub: 'Fresh Tea Leaves', category: 'Nature', src: '/images/game-icons/icon-22.png' },
+  { id: 'icon-23', name: 'Dhanesh', sub: 'Great Indian Hornbill', category: 'Nature', src: '/images/game-icons/icon-23.png' }
+];
