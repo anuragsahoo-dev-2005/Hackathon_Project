@@ -21,7 +21,7 @@ export class SpeechRecognitionService {
     return Boolean(this.recognition);
   }
 
-  start({ onResult, onError, onEnd, lang = 'en-IN' }) {
+  start({ onResult, onError, onEnd, lang = 'en-IN', continuous = false }) {
     if (!this.recognition) {
       if (onError) onError('Speech recognition is not supported in this browser.');
       return;
@@ -32,6 +32,7 @@ export class SpeechRecognitionService {
     }
 
     this.recognition.lang = lang;
+    this.recognition.continuous = continuous;
 
     this.recognition.onstart = () => {
       this.isListening = true;

@@ -12,6 +12,15 @@ const DEFAULT_STATE = {
     currentLevel: 2
   },
   memoryCapsule: null,
+  proactiveCheckIns: false,
+  geofence: {
+    home: null,
+    radiusMeters: 500,
+    consentGranted: false,
+    monitoring: false,
+    lastCheck: null,
+    lastAlert: null,
+  },
   carePlan: {
     title: 'A gentle memory moment',
     steps: ['Personal memory activity', 'Evening medicine with tea', 'Family connection'],
@@ -181,6 +190,47 @@ class CognitiveStore {
     ];
     this.saveState();
     return this.state.memoryCapsule;
+  }
+
+  setProactiveCheckIns(enabled) {
+    this.state.proactiveCheckIns = Boolean(enabled);
+    this.saveState();
+  }
+
+  saveGeofence(settings) {
+    this.state.geofence = {
+      ...this.state.geofence,
+      ...settings,
+      radiusMeters: Math.max(100, Number(settings.radiusMeters) || 500),
+    };
+    this.saveState();
+    return this.state.geofence;
+  }
+
+  recordGeofenceCheck({ inside, latitude, longitude, checkedAt = new Date().toISOString() }) {
+    this.state.geofence = {
+      ...this.state.geofence,
+      lastCheck: { inside, latitude, longitude, checkedAt },
+    };
+
+    if (!inside) {
+      const alert = {
+        id: `geo-${Date.now()}`,
+        time: checkedAt,
+        event: `${this.state.user.name} has moved a bit further from home than usual.`,
+        status: `Last known area: ${latitude.toFixed(3)}, ${longitude.toFixed(3)}`,
+        category: 'safety',
+      };
+      this.state.geofence.lastAlert = alert;
+      this.state.caregiverUpdates = [alert, ...this.state.caregiverUpdates];
+      this.saveState();
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('sathi-geofence-alert', { detail: alert }));
+      }
+    } else {
+      this.saveState();
+    }
+    return this.state.geofence;
   }
 
   completeCarePlanStep(step) {

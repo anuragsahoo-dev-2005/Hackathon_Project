@@ -36,17 +36,35 @@ export default function MemoryStudio({ onOpenPersonalizedGame }) {
     reader.readAsDataURL(file);
   };
 
-  const generateCapsule = () => {
+  const generateCapsule = async () => {
     setIsGenerating(true);
-    window.setTimeout(() => {
-      cognitiveStore.saveMemoryCapsule({
+    let aiStory = {};
+    if (draftImage?.startsWith('data:image/')) {
+      try {
+        const response = await fetch('/api/sathi/vision', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            image: draftImage,
+            prompt: 'Describe this family memory warmly in one short sentence. Mention only visible, non-sensitive details. Do not identify people or make medical claims.',
+          }),
+        });
+        if (response.ok) {
+          const result = await response.json();
+          if (result.text) aiStory = { story: result.text };
+        }
+      } catch (error) {
+        console.warn('Vision memory enrichment unavailable:', error);
+      }
+    }
+    cognitiveStore.saveMemoryCapsule({
         ...DEMO_CAPSULE,
+        ...aiStory,
         image,
         title: draftImage ? 'A cherished family moment' : DEMO_CAPSULE.title
       });
       setGenerated(true);
       setIsGenerating(false);
-    }, 650);
   };
 
   const openGame = () => {
@@ -87,6 +105,7 @@ export default function MemoryStudio({ onOpenPersonalizedGame }) {
             <button onClick={generateCapsule} disabled={isGenerating} className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-pill bg-terracotta text-warm-white text-sm font-semibold hover:bg-terracotta-hover disabled:opacity-60"><Sparkles size={16} /> {isGenerating ? 'Creating capsule...' : 'Generate personal activity'}</button>
           </div>
           {generated && capsule && <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-4 p-3 rounded-soft bg-warm-white border border-gold/30 flex items-start gap-3"><CheckCircle2 className="text-sage mt-0.5" size={18} /><div><p className="text-sm font-semibold">Memory capsule ready</p><p className="text-xs text-charcoal/65">{capsule.title} · {capsule.activityTitle}</p></div></motion.div>}
+          {generated && capsule && <label className="mt-3 flex items-start gap-3 rounded-soft border border-terracotta/15 bg-terracotta-light/30 p-3 text-xs text-charcoal/70"><input type="checkbox" checked={Boolean(storeState.proactiveCheckIns)} onChange={(event) => cognitiveStore.setProactiveCheckIns(event.target.checked)} className="mt-0.5 h-4 w-4 accent-[#C1653A]" /><span><strong className="text-charcoal">Allow gentle memory check-ins</strong><br />Sathi may occasionally start a short conversation about this family moment when the site is idle. You can switch this off anytime.</span></label>}
         </div>
 
         <div className="bg-charcoal text-warm-white rounded-card p-5 sm:p-6 relative overflow-hidden">

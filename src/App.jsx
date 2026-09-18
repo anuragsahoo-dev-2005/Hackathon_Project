@@ -13,6 +13,7 @@ import ObjectRecognitionGame from './components/ObjectRecognitionGame';
 import WhichOneChangedGame from './components/WhichOneChangedGame';
 import GardenGameChooser from './components/GardenGameChooser';
 import PersonalMemoryGame from './components/PersonalMemoryGame';
+import CaregiverDashboard from './components/CaregiverDashboard';
 import SathiCompanion from './components/Sathi/SathiCompanion';
 import butterflyVideo from '../video asset/Butterflies_flying_through_frame_20260915051045.mp4';
 
@@ -24,6 +25,7 @@ export default function App() {
   const [isGameChooserOpen, setIsGameChooserOpen] = useState(false);
   const [personalMemoryCapsule, setPersonalMemoryCapsule] = useState(null);
   const [isGamePaused, setIsGamePaused] = useState(false);
+  const [isCaregiverDashboardOpen, setIsCaregiverDashboardOpen] = useState(false);
 
   const openGame = () => {
     setIsGamePaused(false);
@@ -77,7 +79,10 @@ export default function App() {
         <Hero onOpenGame={openGameChooser} />
         <EmotionalStatement />
         <ForSeniors onOpenGame={openGame} onOpenSequenceGame={openSequenceGame} />
-        <ForCaregivers onOpenPersonalizedGame={openPersonalizedGame} />
+        <ForCaregivers
+          onOpenPersonalizedGame={openPersonalizedGame}
+          onOpenDashboard={() => setIsCaregiverDashboardOpen(true)}
+        />
         <Impact />
         <Footer />
       </div>
@@ -85,10 +90,17 @@ export default function App() {
       {/* Global Sathi companion — voice → intent → tools → store */}
       <SathiCompanion
         onOpenGame={openGame}
+        onOpenDashboard={() => setIsCaregiverDashboardOpen(true)}
         isGameOpen={isGameOpen}
         onPauseGame={() => setIsGamePaused(true)}
         onResumeGame={() => setIsGamePaused(false)}
       />
+
+      <AnimatePresence>
+        {isCaregiverDashboardOpen && (
+          <CaregiverDashboard onClose={() => setIsCaregiverDashboardOpen(false)} />
+        )}
+      </AnimatePresence>
 
       <GardenGameChooser
         isOpen={isGameChooserOpen}

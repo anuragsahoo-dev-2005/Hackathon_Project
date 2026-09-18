@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Mic, Sparkles } from 'lucide-react';
-import SathiAvatar from './SathiAvatar';
+import SathiOrb from './SathiOrb';
 import SathiPanel from './SathiPanel';
 import { speechService } from '../../lib/voice/speechRecognition';
 import { ttsService } from '../../lib/voice/textToSpeech';
-import { sathiBrain } from '../../lib/ai/sathi';
+import { resolveIntent } from '../../lib/ai/sathi';
 import { toolDispatcher } from '../../lib/ai/tools';
 import { cognitiveStore } from '../../lib/store/cognitiveStore';
 
@@ -14,11 +14,12 @@ const GREETINGS = {
   hi: 'नमस्ते! मैं साथी हूँ, आपकी स्मृति साथी। आज मैं आपकी कैसे मदद कर सकती हूँ?',
 };
 
-export default function SathiCompanion({ onOpenGame, isGameOpen, onPauseGame, onResumeGame }) {
+export default function SathiCompanion({ onOpenGame, onOpenDashboard, isGameOpen, onPauseGame, onResumeGame }) {
   const reduceMotion = useReducedMotion();
   const [isOpen, setIsOpen] = useState(false);
   const [avatarState, setAvatarState] = useState('idle');
   const [isListening, setIsListening] = useState(false);
+  const [continuousListening, setContinuousListening] = useState(false);
   const [userTranscript, setUserTranscript] = useState('');
   const [sathiReply, setSathiReply] = useState(GREETINGS.en);
   const [currentLanguage, setCurrentLanguage] = useState(
@@ -28,6 +29,9 @@ export default function SathiCompanion({ onOpenGame, isGameOpen, onPauseGame, on
     typeof navigator === 'undefined' ? true : navigator.onLine
   );
   const [speechSupported] = useState(() => speechService.isSupported());
+  const continuousListeningRef = useRef(false);
+  const isBusyRef = useRef(false);
+  const restartTimerRef = useRef(null);
 
   useEffect(() => {
     toolDispatcher.setHandlers({
@@ -35,7 +39,11 @@ export default function SathiCompanion({ onOpenGame, isGameOpen, onPauseGame, on
         if (onOpenGame) onOpenGame();
       },
       scrollToCaregiver: () => {
-        document.getElementById('for-caregivers')?.scrollIntoView({ behavior: 'smooth' });
+        if (onOpenDashboard) {
+          onOpenDashboard();
+        } else {
+          document.getElementById('for-caregivers')?.scrollIntoView({ behavior: 'smooth' });
+        }
       },
       scrollToSeniors: () => {
         document.getElementById('for-seniors')?.scrollIntoView({ behavior: 'smooth' });
@@ -53,7 +61,7 @@ export default function SathiCompanion({ onOpenGame, isGameOpen, onPauseGame, on
         if (onResumeGame) onResumeGame();
       },
     });
-  }, [onOpenGame, onPauseGame, onResumeGame]);
+  }, [onOpenGame, onOpenDashboard, onPauseGame, onResumeGame]);
 
   useEffect(() => {
     const on = () => setIsOnline(true);
@@ -69,15 +77,31 @@ export default function SathiCompanion({ onOpenGame, isGameOpen, onPauseGame, on
   const speakResponse = useCallback(
     (text) => {
       if (!ttsService.isSupported()) {
+        isBusyRef.current = false;
         setAvatarState('idle');
+        if (continuousListeningRef.current) {
+          restartTimerRef.current = window.setTimeout(() => startListeningSession(), 350);
+        }
         return;
       }
+      isBusyRef.current = true;
+      speechService.stop();
       setAvatarState('speaking');
       ttsService.speak(text, {
         lang: currentLanguage,
         onStart: () => setAvatarState('speaking'),
-        onEnd: () => setAvatarState('idle'),
-        onError: () => setAvatarState('idle'),
+        onEnd: () => {
+          isBusyRef.current = false;
+          setAvatarState('idle');
+          if (continuousListeningRef.current) {
+            window.clearTimeout(restartTimerRef.current);
+            restartTimerRef.current = window.setTimeout(() => startListeningSession(), 350);
+          }
+        },
+        onError: () => {
+          isBusyRef.current = false;
+          setAvatarState('idle');
+        },
       });
     },
     [currentLanguage]
@@ -109,15 +133,48 @@ export default function SathiCompanion({ onOpenGame, isGameOpen, onPauseGame, on
     return () => window.removeEventListener('sathi-game-completed', handleGameCompleted);
   }, [currentLanguage, speakResponse]);
 
+  useEffect(() => {
+    const checkInPrompts = [
+      (capsule) => `I was thinking about ${capsule.title.toLowerCase()}. ${capsule.story} Would you like to tell me what you remember most?`,
+      (capsule) => `That family memory at ${capsule.place} sounds meaningful. Would you like to share a little more about it?`,
+      (capsule) => `I remember ${capsule.subject} from your family memory. It is lovely to keep those moments close.`,
+    ];
+    const timer = window.setInterval(() => {
+      const state = cognitiveStore.getState();
+      if (!state.proactiveCheckIns || !state.memoryCapsule || isGameOpen || isBusyRef.current || document.hidden) return;
+      const prompt = checkInPrompts[Math.floor(Math.random() * checkInPrompts.length)](state.memoryCapsule);
+      setSathiReply(prompt);
+      setIsOpen(true);
+      setAvatarState('speaking');
+      speakResponse(prompt);
+    }, 90000);
+    return () => window.clearInterval(timer);
+  }, [isGameOpen, speakResponse]);
+
+  useEffect(() => {
+    const handleGeofenceAlert = (event) => {
+      const message = currentLanguage === 'hi'
+        ? 'आपके घर से दूरी थोड़ी अधिक हो गई है। क्या आप ठीक हैं? क्या मैं आपको वापस जाने में मदद करूँ?'
+        : 'You are a little further from home than usual. Are you doing alright? Would you like help finding your way back?';
+      setSathiReply(message);
+      setAvatarState('support');
+      setIsOpen(true);
+      speakResponse(message);
+    };
+    window.addEventListener('sathi-geofence-alert', handleGeofenceAlert);
+    return () => window.removeEventListener('sathi-geofence-alert', handleGeofenceAlert);
+  }, [currentLanguage, speakResponse]);
+
   const handleSendMessage = async (text) => {
     if (!text?.trim()) return;
+    isBusyRef.current = true;
     speechService.stop();
     setIsListening(false);
     setUserTranscript(text);
     setAvatarState('thinking');
 
     try {
-      const result = await sathiBrain.processInput(text, {
+      const result = await resolveIntent(text, {
         currentLanguage,
         isGameOpen,
         isOnline,
@@ -143,6 +200,46 @@ export default function SathiCompanion({ onOpenGame, isGameOpen, onPauseGame, on
     }
   };
 
+  const startListeningSession = useCallback(() => {
+    if (!speechSupported || isBusyRef.current) return;
+    ttsService.stopSpeaking();
+    setAvatarState('listening');
+    setIsListening(true);
+    setUserTranscript('');
+
+    speechService.start({
+      lang: currentLanguage === 'hi' ? 'hi-IN' : 'en-IN',
+      continuous: continuousListeningRef.current,
+      onResult: ({ text, isFinal }) => {
+        setUserTranscript(text);
+        if (isFinal) handleSendMessage(text);
+      },
+      onError: (err) => {
+        console.warn('Speech error:', err);
+        setIsListening(false);
+        if (err === 'not-allowed') {
+          continuousListeningRef.current = false;
+          setContinuousListening(false);
+          setSathiReply('Microphone access was blocked. You can still type to me — everything still works.');
+          setAvatarState('support');
+          setIsOpen(true);
+        } else if (continuousListeningRef.current && !isBusyRef.current) {
+          restartTimerRef.current = window.setTimeout(startListeningSession, 700);
+        } else {
+          setAvatarState('idle');
+        }
+      },
+      onEnd: () => {
+        setIsListening(false);
+        if (continuousListeningRef.current && !isBusyRef.current) {
+          restartTimerRef.current = window.setTimeout(startListeningSession, 350);
+        } else if (!isBusyRef.current) {
+          setAvatarState('idle');
+        }
+      },
+    });
+  }, [currentLanguage, handleSendMessage, speechSupported]);
+
   const handleStartListening = () => {
     if (!speechSupported) {
       setSathiReply(
@@ -155,39 +252,31 @@ export default function SathiCompanion({ onOpenGame, isGameOpen, onPauseGame, on
       return;
     }
 
-    ttsService.stopSpeaking();
-    setAvatarState('listening');
-    setIsListening(true);
-    setUserTranscript('');
+    continuousListeningRef.current = false;
+    startListeningSession();
+  };
 
-    const langTag = currentLanguage === 'hi' ? 'hi-IN' : 'en-IN';
-
-    speechService.start({
-      lang: langTag,
-      onResult: ({ text, isFinal }) => {
-        setUserTranscript(text);
-        if (isFinal) {
-          handleSendMessage(text);
-        }
-      },
-      onError: (err) => {
-        console.warn('Speech error:', err);
-        setIsListening(false);
-        setAvatarState('idle');
-        if (err === 'not-allowed') {
-          setSathiReply(
-            'Microphone access was blocked. You can still type to me — I am listening either way.'
-          );
-          setIsOpen(true);
-        }
-      },
-      onEnd: () => {
-        setIsListening(false);
-      },
-    });
+  const handleToggleContinuous = () => {
+    if (!speechSupported) return;
+    const nextValue = !continuousListeningRef.current;
+    continuousListeningRef.current = nextValue;
+    setContinuousListening(nextValue);
+    if (nextValue) {
+      setIsOpen(true);
+      isBusyRef.current = false;
+      startListeningSession();
+    } else {
+      window.clearTimeout(restartTimerRef.current);
+      speechService.stop();
+      setIsListening(false);
+      if (!ttsService.isSpeaking) setAvatarState('idle');
+    }
   };
 
   const handleStopListening = () => {
+    continuousListeningRef.current = false;
+    setContinuousListening(false);
+    window.clearTimeout(restartTimerRef.current);
     speechService.stop();
     setIsListening(false);
     if (userTranscript) {
@@ -217,8 +306,11 @@ export default function SathiCompanion({ onOpenGame, isGameOpen, onPauseGame, on
   const closePanel = useCallback(() => {
     ttsService.stopSpeaking();
     speechService.stop();
+    continuousListeningRef.current = false;
+    window.clearTimeout(restartTimerRef.current);
     setIsOpen(false);
     setIsListening(false);
+    setContinuousListening(false);
     setAvatarState('idle');
   }, []);
 
@@ -270,7 +362,7 @@ export default function SathiCompanion({ onOpenGame, isGameOpen, onPauseGame, on
             </button>
 
             <div className="relative">
-              <SathiAvatar
+              <SathiOrb
                 state={avatarState}
                 size="md"
                 showLabel
@@ -314,10 +406,12 @@ export default function SathiCompanion({ onOpenGame, isGameOpen, onPauseGame, on
                 transcript={userTranscript}
                 sathiReply={sathiReply}
                 isListening={isListening}
+                continuousListening={continuousListening}
                 isOnline={isOnline}
                 speechSupported={speechSupported}
                 onStartListening={handleStartListening}
                 onStopListening={handleStopListening}
+                onToggleContinuous={handleToggleContinuous}
                 onSendMessage={handleSendMessage}
                 onRepeat={handleRepeat}
                 onClose={closePanel}
