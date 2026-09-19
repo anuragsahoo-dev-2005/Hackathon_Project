@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
@@ -15,9 +15,20 @@ import GardenGameChooser from './components/GardenGameChooser';
 import PersonalMemoryGame from './components/PersonalMemoryGame';
 import CaregiverDashboard from './components/CaregiverDashboard';
 import SathiCompanion from './components/Sathi/SathiCompanion';
+import AuthPanel from './components/AuthPanel';
+import { supabase } from './lib/supabase';
+import ScanPage from './components/ScanPage';
+import HowItWorksPage from './components/HowItWorksPage';
 import butterflyVideo from '../video asset/Butterflies_flying_through_frame_20260915051045.mp4';
 
 export default function App() {
+  if (window.location.pathname === '/scan') {
+    return <ScanPage />;
+  }
+  if (window.location.pathname === '/how-it-works') {
+    return <HowItWorksPage />;
+  }
+
   const [isGameOpen, setIsGameOpen] = useState(false);
   const [isSequenceGameOpen, setIsSequenceGameOpen] = useState(false);
   const [isRecognitionGameOpen, setIsRecognitionGameOpen] = useState(false);
@@ -26,6 +37,29 @@ export default function App() {
   const [personalMemoryCapsule, setPersonalMemoryCapsule] = useState(null);
   const [isGamePaused, setIsGamePaused] = useState(false);
   const [isCaregiverDashboardOpen, setIsCaregiverDashboardOpen] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [session, setSession] = useState(null);
+  const [isOnline, setIsOnline] = useState(() => (
+    typeof navigator === 'undefined' ? true : navigator.onLine
+  ));
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!supabase) return undefined;
+    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => setSession(nextSession));
+    return () => listener.subscription.unsubscribe();
+  }, []);
 
   const openGame = () => {
     setIsGamePaused(false);
@@ -49,6 +83,18 @@ export default function App() {
   const openPersonalizedGame = (capsule) => setPersonalMemoryCapsule(capsule);
   const closePersonalizedGame = () => setPersonalMemoryCapsule(null);
 
+  const closeAllViews = () => {
+    setIsGameOpen(false);
+    setIsSequenceGameOpen(false);
+    setIsRecognitionGameOpen(false);
+    setIsWhichChangedOpen(false);
+    setIsGameChooserOpen(false);
+    setPersonalMemoryCapsule(null);
+    setIsCaregiverDashboardOpen(false);
+    setAuthOpen(false);
+    setIsGamePaused(false);
+  };
+
   const chooseGame = (game) => {
     closeGameChooser();
     if (game === 'sequence') {
@@ -64,6 +110,14 @@ export default function App() {
 
   return (
     <div className="relative min-h-screen bg-cream text-charcoal selection:bg-terracotta/20 selection:text-terracotta">
+      <div
+        className={`fixed inset-x-0 top-0 z-[100] px-4 py-2 text-center text-xs font-semibold shadow-warm-sm ${
+          isOnline ? 'hidden' : 'bg-charcoal text-warm-white'
+        }`}
+        role="status"
+      >
+        You are offline. Games, reminders, saved memories, and offline Sathi tools still work. Cloud AI, sign-in, syncing, and image analysis need internet.
+      </div>
       <video
         className="butterfly-background"
         src={butterflyVideo}
@@ -75,7 +129,7 @@ export default function App() {
       />
 
       <div className="site-content relative z-10">
-        <Navbar onOpenGame={openGameChooser} />
+        <Navbar onOpenGame={openGameChooser} session={session} onOpenAuth={() => setAuthOpen(true)} onSignOut={() => supabase?.auth.signOut()} />
         <Hero onOpenGame={openGameChooser} />
         <EmotionalStatement />
         <ForSeniors onOpenGame={openGame} onOpenSequenceGame={openSequenceGame} />
@@ -90,7 +144,12 @@ export default function App() {
       {/* Global Sathi companion — voice → intent → tools → store */}
       <SathiCompanion
         onOpenGame={openGame}
+        onOpenGameChooser={openGameChooser}
         onOpenDashboard={() => setIsCaregiverDashboardOpen(true)}
+        onOpenSequenceGame={openSequenceGame}
+        onOpenRecognitionGame={openRecognitionGame}
+        onOpenWhichChangedGame={openWhichChanged}
+        onCloseAllViews={closeAllViews}
         isGameOpen={isGameOpen}
         onPauseGame={() => setIsGamePaused(true)}
         onResumeGame={() => setIsGamePaused(false)}
@@ -107,6 +166,8 @@ export default function App() {
         onClose={closeGameChooser}
         onChoose={chooseGame}
       />
+
+      {authOpen && <AuthPanel onClose={() => setAuthOpen(false)} onAuthenticated={() => setAuthOpen(false)} />}
 
       <AnimatePresence>
         {personalMemoryCapsule && (

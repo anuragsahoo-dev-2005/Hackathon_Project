@@ -1,4 +1,6 @@
 // Elder-calibrated TTS — always prefers a warm female / girl voice for Sathi
+import { getVoiceLanguage } from './languages';
+
 export class TextToSpeechService {
   constructor() {
     this.voices = [];
@@ -89,8 +91,7 @@ export class TextToSpeechService {
       utterance.pitch = 1.18;
       utterance.volume = 1;
 
-      const isHindi = String(lang).startsWith('hi') || /[\u0900-\u097F]/.test(text);
-      const targetLang = isHindi ? 'hi-IN' : 'en-IN';
+      const targetLang = getVoiceLanguage(lang).speech;
       utterance.lang = targetLang;
 
       const femaleVoice = this.pickFemaleVoice(targetLang);

@@ -53,6 +53,7 @@ export default function Footer() {
                 <li><a href="#for-seniors" className="hover:text-gold transition">Voice Companion</a></li>
                 <li><a href="#for-caregivers" className="hover:text-gold transition">Caregiver Sync</a></li>
                 <li><a href="#impact" className="hover:text-gold transition">Pilot Results</a></li>
+                <li><a href="/scan" className="hover:text-gold transition">Scan on your phone</a></li>
               </ul>
             </div>
 

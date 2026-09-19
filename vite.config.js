@@ -17,6 +17,8 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react(), sathiApiPlugin()],
     server: {
+      host: true,
+      allowedHosts: true,
       port: 5173,
       open: false,
     },

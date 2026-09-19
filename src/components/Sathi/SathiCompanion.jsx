@@ -8,13 +8,25 @@ import { ttsService } from '../../lib/voice/textToSpeech';
 import { resolveIntent } from '../../lib/ai/sathi';
 import { toolDispatcher } from '../../lib/ai/tools';
 import { cognitiveStore } from '../../lib/store/cognitiveStore';
+import { getVoiceLanguage } from '../../lib/voice/languages';
 
 const GREETINGS = {
   en: 'Hello! I am Sathi, your memory companion. How can I help you today?',
   hi: 'नमस्ते! मैं साथी हूँ, आपकी स्मृति साथी। आज मैं आपकी कैसे मदद कर सकती हूँ?',
 };
 
-export default function SathiCompanion({ onOpenGame, onOpenDashboard, isGameOpen, onPauseGame, onResumeGame }) {
+export default function SathiCompanion({
+  onOpenGame,
+  onOpenGameChooser,
+  onOpenDashboard,
+  onOpenSequenceGame,
+  onOpenRecognitionGame,
+  onOpenWhichChangedGame,
+  onCloseAllViews,
+  isGameOpen,
+  onPauseGame,
+  onResumeGame,
+}) {
   const reduceMotion = useReducedMotion();
   const [isOpen, setIsOpen] = useState(false);
   const [avatarState, setAvatarState] = useState('idle');
@@ -38,6 +50,21 @@ export default function SathiCompanion({ onOpenGame, onOpenDashboard, isGameOpen
       openMemoryGame: () => {
         if (onOpenGame) onOpenGame();
       },
+      openGameChooser: () => {
+        if (onOpenGameChooser) onOpenGameChooser();
+      },
+      openSequenceGame: () => {
+        if (onOpenSequenceGame) onOpenSequenceGame();
+      },
+      openRecognitionGame: () => {
+        if (onOpenRecognitionGame) onOpenRecognitionGame();
+      },
+      openWhichChangedGame: () => {
+        if (onOpenWhichChangedGame) onOpenWhichChangedGame();
+      },
+      closeAllViews: () => {
+        if (onCloseAllViews) onCloseAllViews();
+      },
       scrollToCaregiver: () => {
         if (onOpenDashboard) {
           onOpenDashboard();
@@ -47,6 +74,9 @@ export default function SathiCompanion({ onOpenGame, onOpenDashboard, isGameOpen
       },
       scrollToSeniors: () => {
         document.getElementById('for-seniors')?.scrollIntoView({ behavior: 'smooth' });
+      },
+      scrollToImpact: () => {
+        document.getElementById('impact')?.scrollIntoView({ behavior: 'smooth' });
       },
       scrollToTop: () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -61,7 +91,7 @@ export default function SathiCompanion({ onOpenGame, onOpenDashboard, isGameOpen
         if (onResumeGame) onResumeGame();
       },
     });
-  }, [onOpenGame, onOpenDashboard, onPauseGame, onResumeGame]);
+  }, [onOpenGame, onOpenGameChooser, onOpenDashboard, onOpenSequenceGame, onOpenRecognitionGame, onOpenWhichChangedGame, onCloseAllViews, onPauseGame, onResumeGame]);
 
   useEffect(() => {
     const on = () => setIsOnline(true);
@@ -75,7 +105,7 @@ export default function SathiCompanion({ onOpenGame, onOpenDashboard, isGameOpen
   }, []);
 
   const speakResponse = useCallback(
-    (text) => {
+    (text, language = currentLanguage) => {
       if (!ttsService.isSupported()) {
         isBusyRef.current = false;
         setAvatarState('idle');
@@ -88,7 +118,7 @@ export default function SathiCompanion({ onOpenGame, onOpenDashboard, isGameOpen
       speechService.stop();
       setAvatarState('speaking');
       ttsService.speak(text, {
-        lang: currentLanguage,
+        lang: getVoiceLanguage(language).speech,
         onStart: () => setAvatarState('speaking'),
         onEnd: () => {
           isBusyRef.current = false;
@@ -101,6 +131,10 @@ export default function SathiCompanion({ onOpenGame, onOpenDashboard, isGameOpen
         onError: () => {
           isBusyRef.current = false;
           setAvatarState('idle');
+          if (continuousListeningRef.current) {
+            window.clearTimeout(restartTimerRef.current);
+            restartTimerRef.current = window.setTimeout(() => startListeningSession(), 500);
+          }
         },
       });
     },
@@ -208,7 +242,7 @@ export default function SathiCompanion({ onOpenGame, onOpenDashboard, isGameOpen
     setUserTranscript('');
 
     speechService.start({
-      lang: currentLanguage === 'hi' ? 'hi-IN' : 'en-IN',
+      lang: getVoiceLanguage(currentLanguage).speech,
       continuous: continuousListeningRef.current,
       onResult: ({ text, isFinal }) => {
         setUserTranscript(text);
@@ -223,7 +257,8 @@ export default function SathiCompanion({ onOpenGame, onOpenDashboard, isGameOpen
           setSathiReply('Microphone access was blocked. You can still type to me — everything still works.');
           setAvatarState('support');
           setIsOpen(true);
-        } else if (continuousListeningRef.current && !isBusyRef.current) {
+        } else if (continuousListeningRef.current) {
+          window.clearTimeout(restartTimerRef.current);
           restartTimerRef.current = window.setTimeout(startListeningSession, 700);
         } else {
           setAvatarState('idle');
@@ -232,6 +267,7 @@ export default function SathiCompanion({ onOpenGame, onOpenDashboard, isGameOpen
       onEnd: () => {
         setIsListening(false);
         if (continuousListeningRef.current && !isBusyRef.current) {
+          window.clearTimeout(restartTimerRef.current);
           restartTimerRef.current = window.setTimeout(startListeningSession, 350);
         } else if (!isBusyRef.current) {
           setAvatarState('idle');
@@ -298,10 +334,14 @@ export default function SathiCompanion({ onOpenGame, onOpenDashboard, isGameOpen
         ? GREETINGS.hi
         : lang === 'en'
           ? 'Certainly! I will now speak with you in English. How can I assist you today?'
-          : 'I have noted your language preference. Full voice support for this language is coming soon — I will speak clearly in English for now.';
+              : `I have noted your ${getVoiceLanguage(lang).label} preference. I will use it for listening and speaking when your browser has a matching voice.`;
     setSathiReply(greeting);
-    speakResponse(greeting);
+            speakResponse(greeting, lang);
   };
+
+  const minimizePanel = useCallback(() => {
+    setIsOpen(false);
+  }, []);
 
   const closePanel = useCallback(() => {
     ttsService.stopSpeaking();
@@ -335,7 +375,7 @@ export default function SathiCompanion({ onOpenGame, onOpenDashboard, isGameOpen
             initial={reduceMotion ? false : { opacity: 0, scale: 0.8, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8 }}
-            className={`fixed bottom-6 right-6 z-[60] flex items-center gap-3 ${
+            className={`fixed bottom-4 right-4 z-[60] flex items-center gap-3 sm:bottom-6 sm:right-6 ${
               isGameOpen ? 'opacity-90' : ''
             }`}
           >
@@ -415,6 +455,7 @@ export default function SathiCompanion({ onOpenGame, onOpenDashboard, isGameOpen
                 onSendMessage={handleSendMessage}
                 onRepeat={handleRepeat}
                 onClose={closePanel}
+                onMinimize={minimizePanel}
                 currentLanguage={currentLanguage}
                 onChangeLanguage={handleLanguageChange}
               />

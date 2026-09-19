@@ -10,6 +10,13 @@
     background-color: #FBF6EE;
     color: #2B2420;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    overflow-x: hidden;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
   }
 }
 
@@ -77,6 +84,12 @@
 }
 .no-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+button,
+a,
+[role='button'] {
+  touch-action: manipulation;
 }
 
 @media (prefers-reduced-motion: reduce) {

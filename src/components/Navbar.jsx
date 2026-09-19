@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, ArrowRight, Heart } from 'lucide-react';
+import { Menu, X, ArrowRight, Heart, QrCode, LogIn, LogOut } from 'lucide-react';
 
-export default function Navbar({ onOpenGame }) {
+export default function Navbar({ onOpenGame, session, onOpenAuth, onSignOut }) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isElderMode, setIsElderMode] = useState(false);
@@ -27,14 +27,14 @@ export default function Navbar({ onOpenGame }) {
           : 'bg-warm-white/60 backdrop-blur-sm border-b border-charcoal/5 py-4'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-5 sm:px-8 flex items-center justify-between">
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 sm:px-8">
         {/* Logo left */}
         <a href="#hero" className="flex items-center gap-2.5 group">
           <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-terracotta to-gold flex items-center justify-center text-warm-white shadow-warm-sm group-hover:scale-105 transition-transform">
             <Heart size={16} fill="#FFFDF9" />
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="font-serif text-2xl font-bold tracking-tight text-charcoal">
+            <span className="font-serif text-xl font-bold tracking-tight text-charcoal sm:text-2xl">
               SmritiSathi
             </span>
             <span className="relative flex h-2 w-2">
@@ -62,6 +62,25 @@ export default function Navbar({ onOpenGame }) {
 
         {/* Right CTA + Accessibility (Desktop) */}
         <div className="hidden sm:flex items-center gap-3">
+          {session ? (
+            <button type="button" onClick={onSignOut} className="inline-flex min-h-11 items-center gap-2 rounded-pill border border-charcoal/20 px-3.5 py-2 text-sm font-semibold text-charcoal/75 transition hover:border-terracotta hover:text-terracotta" title={`Sign out ${session.user.email || 'account'}`}>
+              <LogOut size={16} /> Sign out
+            </button>
+          ) : (
+            <button type="button" onClick={onOpenAuth} className="inline-flex min-h-11 items-center gap-2 rounded-pill border border-charcoal/20 px-3.5 py-2 text-sm font-semibold text-charcoal/75 transition hover:border-terracotta hover:text-terracotta">
+              <LogIn size={16} /> Sign in
+            </button>
+          )}
+
+          <a
+            href="/scan"
+            className="inline-flex min-h-11 items-center gap-2 rounded-pill border border-terracotta/30 px-3.5 py-2 text-sm font-semibold text-terracotta transition hover:bg-terracotta-light"
+            aria-label="Open QR code to try Smriti Sathi on your phone"
+          >
+            <QrCode size={16} />
+            <span>QR Scan</span>
+          </a>
+
           {/* Elder Mode text zoom accessibility button */}
           <button
             onClick={toggleElderMode}
@@ -84,7 +103,7 @@ export default function Navbar({ onOpenGame }) {
         <div className="sm:hidden flex items-center gap-2">
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 text-charcoal/80 hover:text-charcoal"
+            className="flex min-h-12 min-w-12 items-center justify-center text-charcoal/80 hover:text-charcoal"
             aria-label="Open menu"
           >
             {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
@@ -123,6 +142,18 @@ export default function Navbar({ onOpenGame }) {
           >
             Impact
           </a>
+          <a
+            href="/scan"
+            onClick={() => setMobileMenuOpen(false)}
+            className="inline-flex min-h-12 items-center gap-2 text-base font-medium text-charcoal/90 hover:text-terracotta"
+          >
+            <QrCode size={18} />
+            QR Scan
+          </a>
+          <button type="button" onClick={() => { setMobileMenuOpen(false); session ? onSignOut() : onOpenAuth(); }} className="inline-flex min-h-12 items-center gap-2 text-left text-base font-medium text-charcoal/90 hover:text-terracotta">
+            {session ? <LogOut size={18} /> : <LogIn size={18} />}
+            {session ? 'Sign out' : 'Sign in'}
+          </button>
 
           <div className="pt-3 border-t border-charcoal/10 flex flex-col gap-2">
             <button

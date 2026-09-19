@@ -8,6 +8,9 @@ const APPROVED_TOOLS = new Set([
   'startMemoryGame',
   'startAttentionGame',
   'startRoutineRecall',
+  'openSequenceGame',
+  'openRecognitionGame',
+  'openWhichChangedGame',
   'getTodaySchedule',
   'getProgress',
   'getRecentActivity',
@@ -20,6 +23,11 @@ const APPROVED_TOOLS = new Set([
   'openCaregiverDashboard',
   'openProfile',
   'goHome',
+  'openGameChooser',
+  'openScanPage',
+  'scrollToImpact',
+  'closeCurrentView',
+  'closeAllViews',
 ]);
 
 const SYSTEM_PROMPT = `You are Sathi, a warm AI cognitive companion for elderly users in the Smriti Sathi app.
@@ -30,7 +38,9 @@ Return STRICT JSON only, no markdown:
 If the user asks what to do today, suggest the memory activity and set pendingAction to "startMemoryGame" without calling a tool yet.
 If they affirm after that, call startMemoryGame.
 For reminders like "remind me to drink water at 11", call createReminder with {title,time,type}.
-Keep responses short (1-3 sentences). Match the user's language (English or Hindi).`;
+Use openGameChooser for the activity chooser, openSequenceGame for Sequence Recall, openRecognitionGame for Object Recognition, openWhichChangedGame for Which One Changed, openCaregiverDashboard for family care, openProfile for the seniors area, scrollToImpact for impact/results, openScanPage for the QR page, and goHome for the top of the site. Use closeAllViews when the user asks to close, exit, dismiss, or go back from an open view.
+For casual conversation, respond naturally and warmly even when no tool is needed. Ask a gentle follow-up when it helps.
+Keep responses short (1-3 sentences). Match the requested language in user.language exactly. The language code may be en, hi, as, bn, mni, kh, lus, or brx; write the response naturally in that language, using simple words suitable for an older adult. Do not transliterate unless the user asks.`;
 
 function readJsonBody(req) {
   return new Promise((resolve, reject) => {

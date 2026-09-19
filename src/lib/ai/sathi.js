@@ -19,7 +19,7 @@ const HI = {
   switchHi:
     'ज़रूर! अब मैं आपसे हिंदी में बात करूँगी। आज मैं आपकी कैसे मदद कर सकती हूँ?',
   help:
-    "मैं आपके साथ हूँ! आप कह सकते हैं: 'मेरी मेमोरी गेम शुरू करो', 'आज क्या करना है?', 'ग्यारह बजे पानी पीने की याद दिलाओ', या 'मेरी प्रगति दिखाओ'।",
+    "मैं आपके साथ हूँ! आप कह सकते हैं: 'मेरी मेमोरी गेम शुरू करो', 'Sequence Recall खोलो', 'आज क्या करना है?', 'ग्यारह बजे पानी पीने की याद दिलाओ', 'मेरी प्रगति दिखाओ', या 'इसे बंद करो'।",
   home: 'हम होम पेज के ऊपर वापस आ गए हैं।',
   default:
     'मैं सुन रही हूँ। आप मुझसे आज की स्मृति गतिविधि शुरू करने, याद दिलाने, या अपना कार्यक्रम देखने के लिए कह सकते हैं।',
@@ -46,9 +46,56 @@ export class SathiBrain {
     return typeof navigator === 'undefined' ? true : navigator.onLine;
   }
 
+  isDeterministicActionRequest(text) {
+    return [
+      'close',
+      'exit',
+      'dismiss',
+      'go back',
+      'open ',
+      'start ',
+      'show ',
+      'launch ',
+      'begin ',
+      'remind ',
+      'set a reminder',
+      'create a reminder',
+      'pause',
+      'resume',
+      'repeat',
+      'hindi',
+      'english',
+      'assamese',
+      'bengali',
+      'manipuri',
+      'caregiver',
+      'family',
+      'progress',
+      'score',
+      'qr',
+      'scan',
+      'sequence',
+      'recognition',
+      'which one changed',
+      'बंद',
+      'खोल',
+      'दिखा',
+      'याद',
+    ].some((phrase) => text.includes(phrase));
+  }
+
   async processInput(userInput, context = {}) {
     const trimmed = userInput.trim().toLowerCase();
     this.conversationHistory.push({ role: 'user', text: userInput });
+
+    // Execute app commands locally first so mobile and offline sessions never
+    // depend on a cloud provider returning a correctly shaped tool call.
+    if (this.isDeterministicActionRequest(trimmed)) {
+      const localResult = await this.resolveLocalIntent(trimmed, userInput, context);
+      this.lastResponse = localResult.response;
+      this.conversationHistory.push({ role: 'sathi', text: localResult.response });
+      return localResult;
+    }
 
     const remoteAiEnabled =
       typeof window !== 'undefined' &&
@@ -73,18 +120,27 @@ export class SathiBrain {
         if (res.ok) {
           const data = await res.json();
           if (data?.response) {
-            if (data.tool?.name) {
-              await toolDispatcher.execute(data.tool.name, data.tool.args || {});
-              if (data.tool.name === 'startMemoryGame') this.pendingAction = null;
+            const remoteTool = typeof data.tool === 'string'
+              ? { name: data.tool, args: {} }
+              : data.tool;
+            if (remoteTool?.name) {
+              await toolDispatcher.execute(remoteTool.name, remoteTool.args || {});
+              if (remoteTool.name === 'startMemoryGame') this.pendingAction = null;
             }
             if (data.pendingAction !== undefined) {
               this.pendingAction = data.pendingAction;
+            }
+            if (!remoteTool?.name && this.isDeterministicActionRequest(trimmed)) {
+              const localResult = await this.resolveLocalIntent(trimmed, userInput, context);
+              this.lastResponse = localResult.response;
+              this.conversationHistory.push({ role: 'sathi', text: localResult.response });
+              return localResult;
             }
             this.lastResponse = data.response;
             this.conversationHistory.push({ role: 'sathi', text: data.response });
             return {
               response: data.response,
-              toolCalled: data.tool?.name || null,
+              toolCalled: remoteTool?.name || null,
               state: 'speaking',
             };
           }
@@ -113,6 +169,28 @@ export class SathiBrain {
     const lang = context.currentLanguage || cognitiveStore.getState().user.preferredLanguage || 'en';
     const isHindi = lang === 'hi' || this.detectHindi(text);
     const say = (en, hi) => (isHindi ? hi : en);
+
+    // Closing commands take priority over opening commands such as "close the game".
+    if (
+      text === 'close' ||
+      text === 'close it' ||
+      text === 'close this' ||
+      text === 'exit' ||
+      text === 'dismiss' ||
+      text.includes('close the') ||
+      text.includes('close game') ||
+      text.includes('close window') ||
+      text.includes('go back') ||
+      text.includes(' वापस') ||
+      text.includes('बंद')
+    ) {
+      await toolDispatcher.execute('closeAllViews');
+      return {
+        response: say('Done. I closed the open view.', 'ठीक है। मैंने खुला हुआ पेज बंद कर दिया है।'),
+        toolCalled: 'closeAllViews',
+        state: 'speaking',
+      };
+    }
 
     // 1. Signature wow moment — schedule for today
     if (
@@ -161,6 +239,20 @@ export class SathiBrain {
 
     // 3. Start memory / attention / routine (aliases open Memory Garden)
     if (
+      text.includes('memory games') ||
+      text.includes('all games') ||
+      text.includes('game chooser') ||
+      text.includes('choose a game')
+    ) {
+      await toolDispatcher.execute('openGameChooser');
+      return {
+        response: say('Opening the memory games so you can choose an activity.', 'मैं स्मृति गतिविधियों का चयन खोल रही हूँ।'),
+        toolCalled: 'openGameChooser',
+        state: 'speaking',
+      };
+    }
+
+    if (
       text.includes('memory game') ||
       text.includes('memory activity') ||
       text.includes('start game') ||
@@ -182,6 +274,42 @@ export class SathiBrain {
           HI.startGame
         ),
         toolCalled: tool,
+        state: 'speaking',
+      };
+    }
+
+    if (text.includes('sequence') || text.includes('sequence recall')) {
+      await toolDispatcher.execute('openSequenceGame');
+      return {
+        response: say('Opening Sequence Recall for you.', 'मैं Sequence Recall गतिविधि खोल रही हूँ।'),
+        toolCalled: 'openSequenceGame',
+        state: 'speaking',
+      };
+    }
+
+    if (text.includes('object recognition') || text.includes('recognize objects') || text.includes('recognition game')) {
+      await toolDispatcher.execute('openRecognitionGame');
+      return {
+        response: say('Opening Object Recognition for you.', 'मैं Object Recognition गतिविधि खोल रही हूँ।'),
+        toolCalled: 'openRecognitionGame',
+        state: 'speaking',
+      };
+    }
+
+    if (text.includes('which one changed') || text.includes('changed game')) {
+      await toolDispatcher.execute('openWhichChangedGame');
+      return {
+        response: say('Opening Which One Changed for you.', 'मैं Which One Changed गतिविधि खोल रही हूँ।'),
+        toolCalled: 'openWhichChangedGame',
+        state: 'speaking',
+      };
+    }
+
+    if (text.includes('game options') || text.includes('activity options')) {
+      await toolDispatcher.execute('openGameChooser');
+      return {
+        response: say('Of course. I opened the activity garden so you can choose what feels right today.', 'ज़रूर। मैंने गतिविधियों का बगीचा खोल दिया है। आज जो अच्छा लगे, चुनिए।'),
+        toolCalled: 'openGameChooser',
         state: 'speaking',
       };
     }
@@ -279,6 +407,8 @@ export class SathiBrain {
 
     // 7. Caregiver
     if (
+      text.includes('caregiver dashboard') ||
+      text.includes('family dashboard') ||
       text.includes('caregiver') ||
       text.includes('family') ||
       text.includes('daughter') ||
@@ -373,7 +503,7 @@ export class SathiBrain {
     ) {
       return {
         response: say(
-          "I'm right here with you. That's okay — take your time. You can ask me: 'Start my memory game', 'What should I do today?', 'Remind me to drink water at 11', or 'Show my progress'. Would you like a hint?",
+          "I'm right here with you. That's okay — take your time. You can ask me: 'Start my memory game', 'Open Sequence Recall', 'Close it', 'What should I do today?', 'Remind me to drink water at 11', or 'Show my progress'. Would you like a hint?",
           HI.help
         ),
         toolCalled: null,
@@ -420,6 +550,24 @@ export class SathiBrain {
       };
     }
 
+    if (text.includes('qr') || text.includes('scan') || text.includes('phone')) {
+      await toolDispatcher.execute('openScanPage');
+      return {
+        response: say('I opened the QR page so you can try Smriti Sathi on another phone.', 'मैंने QR पेज खोल दिया है ताकि आप Smriti Sathi को दूसरे फोन पर आज़मा सकें।'),
+        toolCalled: 'openScanPage',
+        state: 'speaking',
+      };
+    }
+
+    if (text.includes('impact') || text.includes('results') || text.includes('validation')) {
+      await toolDispatcher.execute('scrollToImpact');
+      return {
+        response: say('I opened our impact and validation section for you.', 'मैंने प्रभाव और परिणाम वाला भाग खोल दिया है।'),
+        toolCalled: 'scrollToImpact',
+        state: 'speaking',
+      };
+    }
+
     // Context-aware default
     if (context.isGameOpen) {
       return {
@@ -432,13 +580,13 @@ export class SathiBrain {
       };
     }
 
+    const conversationalReply = originalText.length > 2
+      ? `I hear you. Thank you for telling me, "${originalText.slice(0, 120)}${originalText.length > 120 ? '…' : ''}". I’m here with you. Would you like to talk about it, take a gentle activity, or simply sit together for a moment?`
+      : 'I am right here with you. You can talk to me about your day, your memories, or anything on your mind.';
     return {
-      response: say(
-        'I am listening. Feel free to ask me to start today’s memory game, set a reminder, or check your schedule.',
-        HI.default
-      ),
+      response: say(conversationalReply, `मैं आपकी बात सुन रही हूँ। आपने कहा, "${originalText.slice(0, 80)}"। मैं आपके साथ हूँ। क्या आप इसके बारे में और बताना चाहेंगे?`),
       toolCalled: null,
-      state: 'speaking',
+      state: 'support',
     };
   }
 }

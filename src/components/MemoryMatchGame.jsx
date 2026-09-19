@@ -8,8 +8,8 @@ import { chime } from './AudioChime';
 // Difficulty definitions
 const LEVELS = {
   1: { pairs: 6, label: "Level 1: Gentle", cols: "grid-cols-3 sm:grid-cols-4", desc: "6 matching pairs ? Relaxed pace" },
-  2: { pairs: 8, label: "Level 2: Standard", cols: "grid-cols-4", desc: "8 matching pairs ? 4x4 classic grid" },
-  3: { pairs: 10, label: "Level 3: Extended", cols: "grid-cols-4 sm:grid-cols-5", desc: "10 matching pairs ? Higher variety" }
+  2: { pairs: 8, label: "Level 2: Standard", cols: "grid-cols-3 sm:grid-cols-4", desc: "8 matching pairs ? 4x4 classic grid" },
+  3: { pairs: 10, label: "Level 3: Extended", cols: "grid-cols-3 sm:grid-cols-5", desc: "10 matching pairs ? Higher variety" }
 };
 
 export default function MemoryMatchGame({ onClose, isPaused = false }) {
@@ -230,7 +230,7 @@ export default function MemoryMatchGame({ onClose, isPaused = false }) {
         </div>
       )}
       {/* Top Header Bar */}
-      <div className="bg-cream/90 backdrop-blur-md px-6 py-4 border-b border-charcoal/10 flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-charcoal/10 bg-cream/90 px-4 py-4 backdrop-blur-md sm:gap-4 sm:px-6">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-terracotta/15 flex items-center justify-center text-terracotta">
             <Brain size={20} />
@@ -285,7 +285,7 @@ export default function MemoryMatchGame({ onClose, isPaused = false }) {
       </div>
 
       {/* Progress & AI Status Bar */}
-      <div className="bg-warm-white px-6 py-3 border-b border-charcoal/5 flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-charcoal/5 bg-warm-white px-4 py-3 text-xs sm:px-6 sm:text-sm">
         <div className="flex items-center gap-4 text-charcoal/80 font-medium">
           <span>
             Pairs Matched: <strong className="text-terracotta font-serif text-base">{matched.length}/{totalPairs}</strong>
@@ -403,7 +403,7 @@ export default function MemoryMatchGame({ onClose, isPaused = false }) {
                     }
                   }}
                   className="relative aspect-square cursor-pointer select-none focus:outline-none focus:ring-2 focus:ring-terracotta rounded-card"
-                  style={{ minWidth: '76px', minHeight: '76px' }}
+                  style={{ minWidth: '56px', minHeight: '56px' }}
                 >
                   <div
                     className={`w-full h-full rounded-card transition-all duration-500 preserve-3d shadow-warm-sm ${

@@ -1,0 +1,10 @@
+{
+  "name": "Smriti Sathi",
+  "short_name": "Smriti Sathi",
+  "description": "An offline-ready cognitive wellness companion.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FBF6EE",
+  "theme_color": "#C1653A",
+  "icons": []
+}

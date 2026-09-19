@@ -54,7 +54,7 @@ export default function Hero({ onOpenGame }) {
               </button>
 
               <a
-                href="#how-it-works"
+                href="/how-it-works"
                 className="inline-flex items-center gap-2 px-6 py-3.5 rounded-pill bg-warm-white/10 hover:bg-warm-white/20 backdrop-blur-md border border-warm-white/30 text-warm-white font-medium text-base transition-all duration-200"
               >
                 <Play size={14} className="text-gold fill-gold" />

@@ -6,6 +6,9 @@ export const APPROVED_TOOLS = [
   'startMemoryGame',
   'startAttentionGame',
   'startRoutineRecall',
+  'openSequenceGame',
+  'openRecognitionGame',
+  'openWhichChangedGame',
   'getTodaySchedule',
   'getProgress',
   'getRecentActivity',
@@ -18,6 +21,11 @@ export const APPROVED_TOOLS = [
   'openCaregiverDashboard',
   'openProfile',
   'goHome',
+  'openGameChooser',
+  'openScanPage',
+  'scrollToImpact',
+  'closeCurrentView',
+  'closeAllViews',
 ];
 
 export class SathiToolDispatcher {
@@ -49,6 +57,21 @@ export class SathiToolDispatcher {
           };
         }
         return { success: false, error: 'Handler not registered.' };
+
+      case 'openSequenceGame':
+      case 'openRecognitionGame':
+      case 'openWhichChangedGame': {
+        const handlerName = {
+          openSequenceGame: 'openSequenceGame',
+          openRecognitionGame: 'openRecognitionGame',
+          openWhichChangedGame: 'openWhichChangedGame',
+        }[toolName];
+        if (this.handlers[handlerName]) {
+          this.handlers[handlerName]();
+          return { success: true, message: `Opened ${toolName.replace('open', '').replace('Game', ' activity')}.` };
+        }
+        return { success: false, error: 'Handler not registered.' };
+      }
 
       case 'getTodaySchedule': {
         const state = cognitiveStore.getState();
@@ -131,6 +154,27 @@ export class SathiToolDispatcher {
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }
         return { success: true, message: 'Navigated to home.' };
+
+      case 'openGameChooser':
+        if (this.handlers.openGameChooser) this.handlers.openGameChooser();
+        return { success: true, message: 'Opened the activity chooser.' };
+
+      case 'openScanPage':
+        if (typeof window !== 'undefined') window.location.assign('/scan');
+        return { success: true, message: 'Opened the phone QR page.' };
+
+      case 'scrollToImpact':
+        if (this.handlers.scrollToImpact) {
+          this.handlers.scrollToImpact();
+        } else if (typeof window !== 'undefined') {
+          document.getElementById('impact')?.scrollIntoView({ behavior: 'smooth' });
+        }
+        return { success: true, message: 'Opened the impact section.' };
+
+      case 'closeCurrentView':
+      case 'closeAllViews':
+        if (this.handlers.closeAllViews) this.handlers.closeAllViews();
+        return { success: true, message: 'Closed the open view.' };
 
       case 'pauseGame':
         if (this.handlers.pauseGame) this.handlers.pauseGame();
