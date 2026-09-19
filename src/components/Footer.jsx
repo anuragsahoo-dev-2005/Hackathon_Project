@@ -80,7 +80,7 @@ export default function Footer() {
             </p>
             <div className="p-3.5 rounded-soft bg-warm-white/5 border border-warm-white/10 text-xs text-warm-white/80 flex items-center justify-between">
               <span>{TEAM_CONFIG.teamName}</span>
-              <span className="text-gold">? SIH</span>
+              <span className="text-gold">SIH</span>
             </div>
           </div>
 
@@ -91,10 +91,10 @@ export default function Footer() {
           
           <div>
             <p className="text-warm-white/80 font-medium mb-1">
-              Built with care for India's families. ? {TEAM_CONFIG.teamName}, {TEAM_CONFIG.hackathon}
+              Built with care for India's families. {TEAM_CONFIG.teamName}, {TEAM_CONFIG.hackathon}
             </p>
             <p>
-              ? {TEAM_CONFIG.copyrightYear} SmritiSathi. All Rights Reserved. {TEAM_CONFIG.location}.
+              © {TEAM_CONFIG.copyrightYear} SmritiSathi. All Rights Reserved. {TEAM_CONFIG.location}.
             </p>
           </div>
 

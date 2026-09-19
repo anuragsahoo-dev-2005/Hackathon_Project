@@ -4,6 +4,7 @@ import { ShieldCheck, Clock, Smartphone, CheckCircle2, Sparkles, LayoutDashboard
 import { cognitiveStore } from '../lib/store/cognitiveStore';
 import MemoryStudio from './MemoryStudio';
 import GeofenceMonitor from './GeofenceMonitor';
+import { withClickSpeech } from '../lib/voice/speakText';
 
 export default function ForCaregivers({ onOpenPersonalizedGame, onOpenDashboard }) {
   const [activeTab, setActiveTab] = useState('meds');
@@ -46,14 +47,14 @@ export default function ForCaregivers({ onOpenPersonalizedGame, onOpenDashboard 
       current: wellUpdates[0] || {
         time: '7:45 AM',
         event: 'Morning garden stroll logged',
-        status: '2,400 steps ? Hydration reminded'
+        status: '2,400 steps • Hydration reminded'
       }
     }
   ];
 
   const latestEvent = storeState.caregiverUpdates[0] || {
     event: "Papa confirmed: Heart medication taken with warm ginger tea.",
-    status: "Logged automatically ? No frantic phone calls needed",
+    status: "Logged automatically • No frantic phone calls needed",
     time: "Just now"
   };
 
@@ -122,7 +123,7 @@ export default function ForCaregivers({ onOpenPersonalizedGame, onOpenDashboard 
 
             {/* Paragraph */}
             <p className="text-base sm:text-lg text-charcoal/75 leading-relaxed font-light mb-8">
-              Whether you are across the city, at the office, or living overseas, SmritiSathi keeps you seamlessly attuned to your loved ones' daily wellbeing ? protecting their independence while keeping your family safely anchored.
+              Whether you are across the city, at the office, or living overseas, SmritiSathi keeps you seamlessly attuned to your loved ones' daily wellbeing—protecting their independence while keeping your family safely anchored.
             </p>
 
             {/* 3 Bullet Benefits */}
@@ -185,7 +186,7 @@ export default function ForCaregivers({ onOpenPersonalizedGame, onOpenDashboard 
                 {tabs.map((tab) => (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
+                    onClick={withClickSpeech(() => setActiveTab(tab.id))}
                     className={`text-xs px-3 py-1.5 rounded-pill font-medium transition cursor-pointer ${
                       activeTab === tab.id
                         ? 'bg-terracotta text-warm-white shadow-warm-sm'
@@ -207,7 +208,7 @@ export default function ForCaregivers({ onOpenPersonalizedGame, onOpenDashboard 
 
                     <button
                       type="button"
-                      onClick={onOpenDashboard}
+                      onClick={withClickSpeech(onOpenDashboard)}
                       className="mt-3 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-pill bg-charcoal px-5 py-3 text-sm font-semibold text-warm-white transition hover:bg-charcoal/90"
                     >
                       <LayoutDashboard size={17} />

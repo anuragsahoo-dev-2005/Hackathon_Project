@@ -25,8 +25,8 @@ export default function EmotionalStatement() {
           transition={{ duration: 0.9, delay: 0.15 }}
           className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-charcoal font-normal leading-[1.25] tracking-tight max-w-4xl mx-auto mb-16"
         >
-          ?Memory is more than information. <br className="hidden sm:inline" />
-          It is <span className="italic font-normal text-terracotta">connection</span>.?
+          Memory is more than information. <br className="hidden sm:inline" />
+          It is <span className="italic font-normal text-terracotta">connection</span>.
         </motion.h2>
 
         {/* Page 4 Image in soft-cornered frame */}

@@ -71,7 +71,7 @@ export default function Impact() {
             transition={{ duration: 0.7, delay: 0.2 }}
             className="text-base sm:text-lg text-charcoal/70 font-light max-w-2xl mx-auto"
           >
-            Engineered for India's 140 million elders ? bringing cognitive vitality into everyday family life with clinically backed simplicity.
+            Engineered for India's 140 million elders—bringing cognitive vitality into everyday family life with clinically backed simplicity.
           </motion.p>
         </div>
 

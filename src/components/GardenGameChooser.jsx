@@ -1,6 +1,7 @@
 ﻿import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Brain, ListOrdered, Eye, Search } from "lucide-react";
+import { withClickSpeech } from '../lib/voice/speakText';
 
 // Hotspot positions are % of the image (left%, top%)
 // Mapped to real elements in the garden photo:
@@ -152,7 +153,7 @@ export default function GardenGameChooser({ isOpen, onClose, onChoose }) {
 
             {/* Close button */}
             <button
-              onClick={onClose}
+              onClick={withClickSpeech(onClose)}
               className="absolute top-4 right-4 z-20 rounded-full p-2 text-white/70 hover:text-white hover:bg-white/15 transition"
               aria-label="Close"
             >
@@ -223,7 +224,7 @@ function GardenSpot({ spot, index, entered, hovered, setHovered, onChoose }) {
         onMouseEnter={() => setHovered(spot.id)}
         onMouseLeave={() => setHovered(null)}
         onTouchStart={() => setHovered(spot.id)}
-        onClick={() => onChoose(spot.id)}
+        onClick={withClickSpeech(() => onChoose(spot.id))}
         whileHover={{ scale: 1.18 }}
         whileTap={{ scale: 0.93 }}
         className="relative flex items-center justify-center rounded-full focus:outline-none focus-visible:ring-4"

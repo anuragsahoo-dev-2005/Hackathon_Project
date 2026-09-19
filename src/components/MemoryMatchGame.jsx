@@ -7,9 +7,9 @@ import { chime } from './AudioChime';
 
 // Difficulty definitions
 const LEVELS = {
-  1: { pairs: 6, label: "Level 1: Gentle", cols: "grid-cols-3 sm:grid-cols-4", desc: "6 matching pairs ? Relaxed pace" },
-  2: { pairs: 8, label: "Level 2: Standard", cols: "grid-cols-3 sm:grid-cols-4", desc: "8 matching pairs ? 4x4 classic grid" },
-  3: { pairs: 10, label: "Level 3: Extended", cols: "grid-cols-3 sm:grid-cols-5", desc: "10 matching pairs ? Higher variety" }
+  1: { pairs: 6, label: "Level 1: Gentle", cols: "grid-cols-3 sm:grid-cols-4", desc: "6 matching pairs • Relaxed pace" },
+  2: { pairs: 8, label: "Level 2: Standard", cols: "grid-cols-3 sm:grid-cols-4", desc: "8 matching pairs • 4x4 classic grid" },
+  3: { pairs: 10, label: "Level 3: Extended", cols: "grid-cols-3 sm:grid-cols-5", desc: "10 matching pairs • Higher variety" }
 };
 
 export default function MemoryMatchGame({ onClose, isPaused = false }) {
@@ -290,11 +290,11 @@ export default function MemoryMatchGame({ onClose, isPaused = false }) {
           <span>
             Pairs Matched: <strong className="text-terracotta font-serif text-base">{matched.length}/{totalPairs}</strong>
           </span>
-          <span className="text-charcoal/30">?</span>
+          <span className="text-charcoal/30">•</span>
           <span>
             Gentle Attempts: <strong className="text-charcoal">{matchesCount + mistakes}</strong>
           </span>
-          <span className="text-charcoal/30">?</span>
+          <span className="text-charcoal/30">•</span>
           <span>
             Time: <strong className="text-charcoal">{formatTime(seconds)}</strong>
           </span>

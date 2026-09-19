@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Sparkles, HeartHandshake, Globe, WifiOff, Play } from 'lucide-react';
+import { withClickSpeech } from '../lib/voice/speakText';
 
 export default function Hero({ onOpenGame }) {
   return (
@@ -40,13 +41,13 @@ export default function Hero({ onOpenGame }) {
 
             {/* Subhead */}
             <p className="text-lg sm:text-xl text-warm-white/90 leading-relaxed font-sans max-w-2xl mb-9 font-light">
-              Personalized cognitive care that helps seniors stay active, connected and supported ? one meaningful moment at a time.
+              Personalized cognitive care that helps seniors stay active, connected and supported—one meaningful moment at a time.
             </p>
 
             {/* Two Action Buttons */}
             <div className="flex flex-wrap items-center gap-4 mb-12">
               <button
-                onClick={onOpenGame}
+                onClick={withClickSpeech(onOpenGame)}
                 className="inline-flex items-center gap-2.5 px-7 py-3.5 rounded-pill bg-terracotta hover:bg-terracotta-hover text-warm-white font-medium text-base shadow-warm-lg hover:shadow-glow-terracotta transition-all duration-300 hover:-translate-y-0.5 cursor-pointer group"
               >
                 <span>Start Your Memory Journey</span>
@@ -55,6 +56,7 @@ export default function Hero({ onOpenGame }) {
 
               <a
                 href="/how-it-works"
+                onClick={withClickSpeech()}
                 className="inline-flex items-center gap-2 px-6 py-3.5 rounded-pill bg-warm-white/10 hover:bg-warm-white/20 backdrop-blur-md border border-warm-white/30 text-warm-white font-medium text-base transition-all duration-200"
               >
                 <Play size={14} className="text-gold fill-gold" />
@@ -69,17 +71,17 @@ export default function Hero({ onOpenGame }) {
                   <Sparkles size={14} className="text-gold" />
                   AI-Assisted
                 </span>
-                <span className="text-warm-white/30">?</span>
+                <span className="text-warm-white/30">•</span>
                 <span className="flex items-center gap-1.5">
                   <HeartHandshake size={14} className="text-terracotta-light" />
                   Elder-Friendly
                 </span>
-                <span className="text-warm-white/30">?</span>
+                <span className="text-warm-white/30">•</span>
                 <span className="flex items-center gap-1.5">
                   <Globe size={14} className="text-sage-light" />
                   Multilingual
                 </span>
-                <span className="text-warm-white/30">?</span>
+                <span className="text-warm-white/30">•</span>
                 <span className="flex items-center gap-1.5">
                   <WifiOff size={14} className="text-warm-white/70" />
                   Offline-Ready
